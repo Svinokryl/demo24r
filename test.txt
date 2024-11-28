@@ -1,0 +1,44 @@
+SMB:
+
+mkdir /opt/{branch,network,admin}
+chmod
+vim /etc/samba/smb.conf
+
+[Branch_Files]
+	path = /opt/branch
+	writable = yes
+	read only = no
+	valid users = @"HQ\Branch admins"
+
+[Network]
+...
+
+[Admin_Files]
+
+BR-SRV:
+apt-get install cifs-utils -y
+apt-get install system-settings-enable-kill-user-processes -y
+reboot
+vim /etc/pam.d/system-auth
+
+session		[success=1 default=ignore] pam_succeed_if.so	service = systemd-user quiet
+session		optional	pam_mount.so disable_interactive
+
+vim /etc/security/pam_mount.conf.xml
+<volume uid="Admin"
+	fstype="cifs"
+	server="hq-srv.hq.work"
+	path="Admin_Files"
+	mountpoint="/mnt/All_files"
+	options="sec=krb5i,cruid=%(USERUID),nounix,uid=%(USERUID),gid=%(USERGID),file_mode=0664,dir_mode=0775"/>
+
+<volume uid="Network admin"
+... />
+
+<volume uid="Branch admin"
+... />
+
+
+
+Apache:
+https://br-srv.hq.work/moodle/user/edit.php
